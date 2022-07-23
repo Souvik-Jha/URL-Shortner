@@ -64,7 +64,7 @@ const urlShorten = async function (req, res) {
         if (parsedcatch) {
             return res.status(200).send({ status: true, data: parsedcatch })
         } else {
-            let CheckUrl = await urlModel.findOne({ longUrl: longUrl })
+            let CheckUrl = await urlModel.findOne({ longUrl: longUrl }).select({ urlCode: 1, longUrl: 1, shortUrl: 1, _id: 0 })
             await SET_ASYNC(`${longUrl}`, JSON.stringify(CheckUrl))
             if (CheckUrl) return res.status(200).send({ status: true, data: CheckUrl });
         }
@@ -74,8 +74,13 @@ const urlShorten = async function (req, res) {
         data.urlCode = urlCode
         data.shortUrl = shortUrl
         const saveData = await urlModel.create(data)
-        await SET_ASYNC(`${longUrl}`, JSON.stringify(saveData))
-        res.status(201).send({ status: true, data: saveData })
+        let result = {
+            urlCode: saveData.urlCode,
+            longUrl: saveData.longUrl,
+            shortUrl: saveData.shortUrl
+        }
+        await SET_ASYNC(`${longUrl}`, JSON.stringify(result))
+        res.status(201).send({ status: true, data: result })
     } catch (error) {
         console.log(error)
         res.status(500).send({ status: false, message: error.message })
